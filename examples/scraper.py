@@ -1,0 +1,49 @@
+import logging
+import time
+import traceback
+
+from request import WebRequestType
+from session import WebSessionFactory
+from storage import create_local_cookie_storage, convert_HAR_to_markdown, write_HAR_file
+from util import LogHelper
+
+
+if __name__ == '__main__':
+
+    logger = LogHelper.configure(logging.DEBUG)
+
+    cookies_storage = create_local_cookie_storage()
+
+    # creates session and pre-loads cookies from persisted local cookie storage
+    web_session = WebSessionFactory.create(
+        cookies_storage,
+        default_referer='https://www.jet2holidays.com',
+        sensitive_values=[], sensitive_params=[])
+
+    try:
+        response1 = web_session.get('https://www.jet2holidays.com')
+
+        print(response1.text)
+
+        time.sleep(1)
+
+        response2 = web_session.post(
+            url='https://www.jet2holidays.com/api/jet2/sitesearch/HotelAndRegionList',
+            request_type=WebRequestType.XHR,
+            data={
+                'term': 'radi',
+                'maxResults': 30
+            }
+        )
+
+        print(response2.text)
+
+    except Exception as ex:
+        logger.error(traceback.print_exc())
+    finally:
+        # persists cookies to local file
+        cookies_storage.save(web_session.cookies)
+        # writes to 'session-cache/session-DD-MM-YYYY HH-MM-SS.har' file
+        write_HAR_file(web_session.request_session_context)
+        # converts HAR file to markdown file + response files in folder 'session-cache/session-DD-MM-YYYY HH-MM-SS/'
+        convert_HAR_to_markdown(web_session.request_session_context)
