@@ -125,7 +125,7 @@ class HAR2MarkdownRenderer:
             response_content = entry['response']['content'].get('text')
             if response_content is not None:
                 FileHelper.write_file(str(content_file_path), response_content)
-            elif entry['response']['content'].get('size') > 0:
+            elif entry['response']['content'].get('size') > 0 and int(entry['response']['status']) != 302:
                 logger.warning(f"response content is missing for '{content_file_path}'")
 
     def _rendering(
