@@ -54,7 +54,7 @@
                         {%- for name, value in http_entry.request.params.items() %}
                             {
                             "name": "{{ name }}",
-                            "value": {{ clean_param_value(data_item[0], data_item[1]) }}
+                            "value": {{ clean_param_value(name, value) }}
                             }{{ ", " if not loop.last else "" }}
                         {%- endfor %}
                     ],
@@ -62,10 +62,10 @@
                     "postData": {
                         "mimeType": "{{ http_entry.request.headers.get('Content-Type') }}",
                         "params": [
-                            {%- for data_item in http_entry.request.data.items() %}
+                            {%- for name, value in http_entry.request.data.items() %}
                                 {
-                                "name": "{{ data_item[0] }}",
-                                "value": {{ clean_param_value(data_item[0], data_item[1]) }}
+                                "name": "{{ name }}",
+                                "value": {{ clean_param_value(name, value) }}
                                 }{{ ", " if not loop.last else "" }}
                             {%- endfor %}
                         ],
