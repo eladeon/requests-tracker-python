@@ -1,3 +1,4 @@
+.pytest_cache
 /session_cache/
 /.idea/
 /venv/

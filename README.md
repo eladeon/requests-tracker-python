@@ -8,6 +8,11 @@ This library is useful when you develop / run web scrapers. It allows you to:
 | Development | Record scraper requests via the WebSession class + convert to a markdown file and compare to the initial recorded version to spot differences. Best done in x2 different tabs in the browser                           |
 | Production  | Record scrapers in production & save request history to a HAR file: Useful when debugging bugs / extending your scraper. For example you can add an AWS S3 implementation (implement IRequestSessionStorage interface) |
 
+## Installation
+
+```
+pip3 install requests-tracker-python
+```
 
 ## HAR Files Explained
 
