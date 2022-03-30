@@ -43,6 +43,7 @@ class Requests2HARRenderer:
             template_dir: str = Path(__file__).parent.joinpath('jinja'),
             template_name: str = 'req2har.jinja2'
     ):
+        logger.debug(f"Loading jinja2 template (template_dir='{template_dir}', template_name='{template_name}' ...")
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
         env.filters['safe_text'] = self._safe_text_filter
         # env.filters['cast_int'] = self.cast_int
@@ -134,6 +135,7 @@ class HAR2MarkdownRenderer:
             template_dir: str = Path(__file__).parent.joinpath('jinja'),
             template_name: str = 'har2md.jinja2'
     ):
+        logger.debug(f"Loading jinja2 template (template_dir='{template_dir}', template_name='{template_name}' ...")
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
         env.filters['safe_text'] = self.safe_text_filter
         template = env.get_template(template_name)
