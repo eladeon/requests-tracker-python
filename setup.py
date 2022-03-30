@@ -23,7 +23,6 @@ setup(
     long_description="Useful python library to analyse, develop and run web scrapers using HAR and markdown files",
     test_suite="tests",
     packages=find_packages(exclude=("tests",)),
-    package_data={'requests-tracker': ['requests_tracker/jinja/*.*']},
     include_package_data=True,
     python_requires=">=3.7",
     classifiers=[
