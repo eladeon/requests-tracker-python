@@ -1,5 +1,12 @@
+# python
 .pytest_cache
-/session_cache/
-/.idea/
 /venv/
+/build/
+*.egg-info
+
+# codebase
 tests/temp
+/session_cache/
+
+# Jetbrains IDE
+/.idea/

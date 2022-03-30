@@ -10,8 +10,14 @@ This library is useful when you develop / run web scrapers. It allows you to:
 
 ## Installation
 
+Install via pip
 ```
-pip3 install requests-tracker-python
+pip3 install git+https://github.com/eladeon/requests-tracker-python@v1.0.0#egg=requests-tracker
+```
+
+Or add the following line to your requirements.txt file:
+```
+git+https://github.com/eladeon/requests-tracker-python@v1.0.0#egg=requests-tracker
 ```
 
 ## HAR Files Explained

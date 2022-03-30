@@ -1,16 +1,16 @@
-import re
 from setuptools import setup, find_packages
 import os
 
 
 def get_version():
-    # Get version number from VERSION file
     with open(os.path.join(os.path.dirname(__file__), "requests_tracker", "__init__.py")) \
             as version_file:
         # File has format: __version__ = '{version_number}'
-        file_contents = version_file.read()
-        version_number = re.findall("__version__\s*=\s*'([\d\.]*)'", file_contents)[1]
-        return version_number
+        for line in version_file.readlines():
+            if line.startswith('__version__'):
+                parts = line.split("=")
+                version_number = parts[1].strip().replace("'", "")
+                return version_number
 
 
 setup(
@@ -34,7 +34,6 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     install_requires=[
-        "requests",
         "setuptools"
     ],
 )
