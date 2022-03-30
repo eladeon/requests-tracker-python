@@ -14,7 +14,7 @@ def get_version():
 
 
 setup(
-    name="requests-tracker-python",
+    name="requests-tracker",
     version=get_version(),
     author="Kobus Roux",
     url="https://github.com/eladeon/requests-tracker-python",
