@@ -7,8 +7,8 @@ import requests
 from requests import Response, Session, Request
 from requests_mock import Mocker
 
-from request import WebRequestType, RequestSessionContext, HttpRequestEntry
-from session import IWebSession
+from .request import WebRequestType, RequestSessionContext, HttpRequestEntry
+from .session import IWebSession
 
 logger = logging.getLogger(__name__)
 

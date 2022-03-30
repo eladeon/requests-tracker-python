@@ -1,10 +1,10 @@
 import http
 from pathlib import Path
 
-from mocks import MockWebSession
-from renderers import HAR2MarkdownRenderer, Requests2HARRenderer
-from session import IWebSession
-from util import FileHelper, LogHelper
+from requests_tracker.mocks import MockWebSession
+from requests_tracker.renderers import HAR2MarkdownRenderer, Requests2HARRenderer
+from requests_tracker.session import IWebSession
+from requests_tracker.util import FileHelper, LogHelper
 
 LogHelper.configure_std_out()
 

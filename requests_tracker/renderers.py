@@ -7,8 +7,8 @@ from pathlib import Path
 import jinja2
 from urllib3.util import parse_url
 
-from request import RequestSessionContext
-from util import FileHelper
+from .request import RequestSessionContext
+from .util import FileHelper
 
 logger = logging.getLogger(__name__)
 

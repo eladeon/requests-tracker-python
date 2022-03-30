@@ -2,8 +2,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from renderers import HAR2MarkdownRenderer
-from util import LogHelper
+from .renderers import HAR2MarkdownRenderer
+from .util import LogHelper
 
 logger = logging.getLogger(__name__)
 

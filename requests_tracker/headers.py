@@ -1,8 +1,8 @@
 import random
 from urllib.parse import urlencode
 
-from request import RequestSessionContext, UrlHelper
-from util import DictionaryHelper
+from .request import RequestSessionContext, UrlHelper
+from .util import DictionaryHelper
 
 
 class IHeaderFactory:

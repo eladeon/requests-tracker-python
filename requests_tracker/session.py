@@ -8,9 +8,9 @@ from time import sleep
 import requests
 from requests import Response, Request
 
-from headers import HeaderFactory, IHeaderFactory
-from request import RequestSessionContext, WebRequestType, HttpRequestEntry
-from storage import ICookieStorage
+from .headers import HeaderFactory, IHeaderFactory
+from .request import RequestSessionContext, WebRequestType, HttpRequestEntry
+from .storage import ICookieStorage
 
 logger = logging.getLogger(__name__)
 
