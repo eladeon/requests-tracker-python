@@ -54,7 +54,7 @@ python3 requests_tracker/har2md.py tests/input/hargreaves-example.har -o session
 **2) Run scraper code, save requests to HAR file, convert to Markdown :**
 
 ```
-python3 examples/scraper.py 
+PYTHONPATH=. python3 examples/scraper.py 
 ```
 
 # Inspired by:

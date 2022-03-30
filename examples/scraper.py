@@ -1,18 +1,20 @@
 import logging
 import time
 import traceback
+from pathlib import Path
 
-from request import WebRequestType
-from session import WebSessionFactory
-from storage import create_local_cookie_storage, convert_HAR_to_markdown, write_HAR_file
-from util import LogHelper
-
+from requests_tracker.request import WebRequestType
+from requests_tracker.session import WebSessionFactory
+from requests_tracker.storage import convert_HAR_to_markdown, write_HAR_to_local_file, CookiesFileStorage
+from requests_tracker.util import LogHelper
 
 if __name__ == '__main__':
 
     logger = LogHelper.configure(logging.DEBUG)
 
-    cookies_storage = create_local_cookie_storage()
+    session_cache_path = Path(__file__).parent.parent.joinpath('session_cache')
+
+    cookies_storage = CookiesFileStorage(session_cache_path)
 
     # creates session and pre-loads cookies from persisted local cookie storage
     web_session = WebSessionFactory.create(
@@ -44,6 +46,6 @@ if __name__ == '__main__':
         # persists cookies to local file
         cookies_storage.save(web_session.cookies)
         # writes to 'session-cache/session-DD-MM-YYYY HH-MM-SS.har' file
-        write_HAR_file(web_session.request_session_context)
+        write_HAR_to_local_file(session_cache_path, web_session.request_session_context)
         # converts HAR file to markdown file + response files in folder 'session-cache/session-DD-MM-YYYY HH-MM-SS/'
-        convert_HAR_to_markdown(web_session.request_session_context)
+        convert_HAR_to_markdown(session_cache_path, web_session.request_session_context)

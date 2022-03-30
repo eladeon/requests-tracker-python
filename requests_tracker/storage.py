@@ -1,6 +1,5 @@
 import logging
 import os
-from datetime import datetime
 from http.cookiejar import CookieJar, LWPCookieJar, Cookie
 from os import path
 from pathlib import Path
@@ -9,7 +8,6 @@ import requests
 
 from .renderers import Requests2HARRenderer, HAR2MarkdownRenderer
 from .request import RequestSessionContext
-from .util import PathHelper
 
 logger = logging.getLogger(__name__)
 DEFAULT_SESSION_CACHE_FOLDER = 'session_cache'
@@ -36,8 +34,8 @@ class IRequestSessionStorage:
 class CookiesFileStorage(ICookieStorage):
     _cookies_file_path: Path
 
-    def __init__(self, cookies_file_path: Path):
-        self._cookies_file_path = cookies_file_path
+    def __init__(self, session_cache_path: Path, cookie_file_name: str = 'cookies.txt'):
+        self._cookies_file_path = session_cache_path.joinpath(cookie_file_name)
 
     def load(self, session: requests.Session):
         file_path = self._cookies_file_path
@@ -107,33 +105,20 @@ class RequestSessionFileStorage(IRequestSessionStorage):
         return str(self._requests_file_path)
 
 
-def create_local_cookie_storage(relative_folder: str = DEFAULT_SESSION_CACHE_FOLDER):
-    cookies_file_path = PathHelper.get_project_root() \
-        .joinpath(relative_folder).joinpath('cookies.txt')
-    return CookiesFileStorage(cookies_file_path)
+def create_local_cookie_storage(cookies_file: Path):
+    return CookiesFileStorage(cookies_file)
 
 
-def create_local_request_storage(relative_folder: str = DEFAULT_SESSION_CACHE_FOLDER):
-    dt_string = datetime.now().strftime("%d-%m-%Y %H-%M-%S")
-    requests_file_path = PathHelper.get_project_root() \
-        .joinpath(relative_folder).joinpath(f"session-{dt_string}.har")
-    return RequestSessionFileStorage(requests_file_path=requests_file_path)
-
-
-def write_HAR_file(request_session_context: RequestSessionContext,
-                   relative_folder: str = DEFAULT_SESSION_CACHE_FOLDER):
+def write_HAR_to_local_file(session_cache_path: Path, request_session_context: RequestSessionContext):
     dt_string = request_session_context.session_start_time.strftime("%d-%m-%Y %H-%M-%S")
-    requests_file_path = PathHelper.get_project_root() \
-        .joinpath(relative_folder).joinpath(f"session-{dt_string}.har")
+    requests_file_path = session_cache_path.joinpath(f"session-{dt_string}.har")
     request_storage = RequestSessionFileStorage(requests_file_path=requests_file_path)
     request_storage.write(request_session_context)
 
 
-def convert_HAR_to_markdown(request_session_context: RequestSessionContext,
-                            relative_folder: str = DEFAULT_SESSION_CACHE_FOLDER):
+def convert_HAR_to_markdown(session_cache_path: Path, request_session_context: RequestSessionContext):
     dt_string = request_session_context.session_start_time.strftime("%d-%m-%Y %H-%M-%S")
-    requests_file_path = PathHelper.get_project_root() \
-        .joinpath(relative_folder).joinpath(f"session-{dt_string}.har")
+    requests_file_path = session_cache_path.joinpath(f"session-{dt_string}.har")
 
     input_file_path = requests_file_path
     output_folder_path = Path.joinpath(input_file_path.parent, input_file_path.stem)

@@ -1,7 +1,6 @@
-from os import path
 import logging
 import sys
-from pathlib import Path
+from os import path
 from typing import Union
 
 
@@ -48,9 +47,3 @@ class DictionaryHelper:
         for key, val in higher_priority.items():
             result[key] = val
         return result
-
-
-class PathHelper:
-    @staticmethod
-    def get_project_root() -> Path:
-        return Path(__file__).parent.parent
