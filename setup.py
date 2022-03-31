@@ -35,6 +35,11 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     install_requires=[
-        "setuptools"
+        "setuptools",
+        "MarkupSafe==2.0.0",  # Jinja2 issue (ImportError: cannot import name 'soft_unicode' from 'markupsafe')
+        "Jinja2",
+        "requests",
+        "argparse",
+        "urllib3"
     ],
 )
