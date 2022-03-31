@@ -39,6 +39,7 @@ setup(
         "MarkupSafe==2.0.0",  # Jinja2 issue (ImportError: cannot import name 'soft_unicode' from 'markupsafe')
         "Jinja2",
         "requests",
+        "requests-mock",
         "argparse",
         "urllib3"
     ],
