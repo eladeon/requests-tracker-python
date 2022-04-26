@@ -25,7 +25,7 @@ if __name__ == '__main__':
     try:
         response1 = web_session.get('https://www.jet2holidays.com')
 
-        print(response1.text)
+        # print(response1.text)
 
         time.sleep(1)
 

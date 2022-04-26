@@ -9,7 +9,7 @@ import requests
 from requests import Response, Request
 
 from .headers import HeaderFactory, IHeaderFactory
-from .request import RequestSessionContext, WebRequestType, HttpRequestEntry
+from .request import RequestSessionContext, WebRequestType, HttpRequestEntry, NetworkHelper
 from .storage import ICookieStorage
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class WebSession(IWebSession):
         should_retry = True
         while should_retry:
             try:
-                response = session.send(prepared_req, stream=True)
+                response = session.send(prepared_req)
                 should_retry = False
             except (RemoteDisconnected, requests.ConnectionError) as ex:
                 logger.warning(f"RemoteDisconnected error (remaining_retries = {remaining_retries}")
@@ -83,13 +83,11 @@ class WebSession(IWebSession):
                 else:
                     raise ex
 
-        socket = response.raw.connection.sock
-
         response_time_ms = (datetime.now() - start_time).total_seconds() * 1000
+        local_ip_address = NetworkHelper.get_local_ip_address()
+        server_ip_address = NetworkHelper.get_remote_server_ip_address(prepared_req.url)
 
-        # tuples (ip, port)
-        local_ip_address = socket.getsockname() if socket is not None else None
-        server_ip_address = socket.getpeername() if socket is not None else None
+        logger.debug(f"Remote host ({server_ip_address}) responded in {response_time_ms:.3f} ms")
 
         arguments = {
             'request_cookies': request_cookies,

@@ -114,8 +114,8 @@
                 },
                 "cache": { },
                 "timings": { },
-                "serverIPAddress": "{{ http_entry.server_ip_address[0] }}",
-                "connection":"{{ http_entry.local_ip_address[1] }}",
+                "serverIPAddress": "{{ http_entry.server_ip_address }}",
+                "connection":"{{ http_entry.local_ip_address }}",
                 "comment": ""
             }{{ ", " if not loop.last else "" }}
         {%- endfor %}

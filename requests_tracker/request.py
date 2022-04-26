@@ -1,3 +1,5 @@
+import logging
+import socket
 from datetime import datetime
 from enum import Enum
 from http.cookiejar import CookieJar
@@ -5,6 +7,8 @@ from typing import List
 from urllib.parse import urlparse, parse_qs, urlencode
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 class UrlHelper:
@@ -24,6 +28,30 @@ class UrlHelper:
         return f"{parsed_url.scheme}://{parsed_url.hostname}{parsed_url.path}"
 
 
+class NetworkHelper:
+    @staticmethod
+    def get_local_ip_address():
+        try:
+            ip_address = socket.gethostbyname(socket.gethostname())
+        except socket.error as err_msg:
+            logger.warning(f"Failed to retrieve IP address for local host {err_msg}")
+            ip_address = '0.0.0.0'
+        return ip_address
+
+    @staticmethod
+    def get_remote_server_ip_address(remote_url: str):
+        remote_host = None
+        try:
+            parsed_uri = urlparse(remote_url)
+            remote_host = parsed_uri.netloc
+            ip_address = socket.gethostbyname(remote_host)
+        except socket.error as err_msg:
+            logger.warning(f"Failed to retrieve IP address for remote-url ({remote_url}),"
+                           f" remote-host ({remote_host}): {err_msg}")
+            ip_address = '0.0.0.0'
+        return ip_address
+
+
 class WebRequestType(Enum):
     Document = 'document'
     XHR = 'xhr'
@@ -38,8 +66,8 @@ class HttpRequestEntry:
     _response: requests.Response
     _start_time: datetime
     _response_time_ms: float
-    _server_ip_address: (str, int)
-    _local_ip_address: (str, int)
+    _server_ip_address: str
+    _local_ip_address: str
 
     def __init__(self,
                  request: requests.Request,
@@ -47,8 +75,8 @@ class HttpRequestEntry:
                  response: requests.Response,
                  start_time: datetime,
                  response_time_ms: float,
-                 server_ip_address: (str, int),
-                 local_ip_address: (str, int),
+                 server_ip_address: str,
+                 local_ip_address: str,
                  ):
         self._request = request
         self._request_cookies = request_cookies
