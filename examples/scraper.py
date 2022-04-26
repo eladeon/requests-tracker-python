@@ -20,7 +20,11 @@ if __name__ == '__main__':
     web_session = WebSessionFactory.create(
         cookies_storage,
         default_referer='https://www.jet2holidays.com',
-        sensitive_values=[], sensitive_params=[])
+        sensitive_values=[],
+        sensitive_params=[],
+        retry_count=1,
+        timeout=10.00
+    )
 
     try:
         response1 = web_session.get('https://www.jet2holidays.com')

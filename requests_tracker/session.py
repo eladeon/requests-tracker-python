@@ -41,16 +41,19 @@ class WebSession(IWebSession):
     _request_session_context: RequestSessionContext
     _header_factory: IHeaderFactory
     _retry_count: int
+    _timeout: float
 
     def __init__(self,
                  session: requests.Session,
                  request_session_context: RequestSessionContext,
                  header_factory: IHeaderFactory,
-                 retry_count: int = 3):
+                 retry_count: int = 0,
+                 timeout: float = None):
         self._session = session
         self._request_session_context = request_session_context
         self._header_factory = header_factory
         self._retry_count = retry_count
+        self._timeout = timeout
 
     @property
     def cookies(self) -> CookieJar:
@@ -72,10 +75,13 @@ class WebSession(IWebSession):
         should_retry = True
         while should_retry:
             try:
-                response = session.send(prepared_req)
+                arguments = {}
+                if self._timeout is not None:
+                    arguments['timeout'] = self._timeout
+                response = session.send(prepared_req, **arguments)
                 should_retry = False
             except (RemoteDisconnected, requests.ConnectionError) as ex:
-                logger.warning(f"RemoteDisconnected error (remaining_retries = {remaining_retries}")
+                logger.warning(f"Connection Error ({ex}): Remaining_retries = {remaining_retries}")
                 remaining_retries = remaining_retries - 1
                 if remaining_retries > 0:
                     logger.warning(f"Pausing briefly before retrying ...")
@@ -142,7 +148,9 @@ class WebSessionFactory:
             cookie_storage: ICookieStorage,
             default_referer: str,
             sensitive_values: list,
-            sensitive_params: list) -> IWebSession:
+            sensitive_params: list,
+            retry_count: int = 0,
+            timeout: float = None) -> IWebSession:
         requests_session = requests.Session()
 
         cookie_storage.load(requests_session)
@@ -158,4 +166,6 @@ class WebSessionFactory:
         return WebSession(
             session=requests_session,
             request_session_context=request_session_context,
-            header_factory=header_factory)
+            header_factory=header_factory,
+            retry_count=retry_count,
+            timeout=timeout)
