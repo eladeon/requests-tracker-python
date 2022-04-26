@@ -83,7 +83,7 @@ class WebSession(IWebSession):
             except (RemoteDisconnected, requests.ConnectionError) as ex:
                 logger.warning(f"Connection Error ({ex}): Remaining_retries = {remaining_retries}")
                 remaining_retries = remaining_retries - 1
-                if remaining_retries > 0:
+                if remaining_retries >= 0:
                     logger.warning(f"Pausing briefly before retrying ...")
                     sleep(1)
                 else:
