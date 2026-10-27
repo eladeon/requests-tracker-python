@@ -1,4 +1,3 @@
-import random
 from urllib.parse import urlencode
 
 from .request import RequestSessionContext, UrlHelper
@@ -21,22 +20,25 @@ class IHeaderFactory:
 
 
 class HeaderFactory(IHeaderFactory):
+    """Builds request headers for ONE consistent browser identity: Google Chrome on macOS.
 
-    ACCEPT_LANGUAGE = 'en-US,en;q=0.5'
-    ACCEPT_ENCODING = 'gzip, deflate, br'
+    The User-Agent, the Client Hints and the Accept-* headers all describe the same browser, so the
+    traffic looks like a real Chrome. Previously a User-Agent was chosen at random from a list of ten
+    (one entry malformed, two merged by a missing comma) while Firefox-style Accept-Language/Encoding
+    and no Client Hints were sent regardless -- a mismatched fingerprint any site could spot. The
+    values below track a real captured Chrome session; when the emulated Chrome version moves,
+    update the User-Agent and the Sec-Ch-Ua version together.
+    """
 
-    USER_AGENTS = [
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:97.0) Gecko/20100101 Firefox/97.0',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15',
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36/LGzPQZUn-10',
-        'Mozilla/5.0 (Linux; Android 5.1.1; SAMSUNG-SM-G530AZ) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.86 Mobile Safari/537.36',
-        'Mozilla/5.0 (Linux; Android 10; X104-EEA Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/88.0.4324.152 Safari/537.36',
-        'Mozilla/5.0 (Linux; Android 4.4.2; GT-P5220) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36',
-        'Mozilla/5.0 (Linux; Android 7.0; FRD-L19) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.111 Mobile Safari/537.36',
-        'Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36'
-    ]
+    USER_AGENT = ('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '
+                  '(KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36')
+    SEC_CH_UA = '"Google Chrome";v="155", "Chromium";v="155", "Not(A:Brand";v="24"'
+    SEC_CH_UA_MOBILE = '?0'
+    SEC_CH_UA_PLATFORM = '"macOS"'
+    ACCEPT_LANGUAGE = 'en-GB,en-US;q=0.9,en;q=0.8'
+    ACCEPT_ENCODING = 'gzip, deflate, br, zstd'
+    ACCEPT_DOCUMENT = ('text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,'
+                       'image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7')
 
     _user_agent: str
     _request_session_context: RequestSessionContext
@@ -45,94 +47,97 @@ class HeaderFactory(IHeaderFactory):
         self._request_session_context = request_session_context
         self._user_agent = user_agent
 
+    def _client_hints(self) -> dict:
+        """Chrome sends the low-entropy Client Hints on every request."""
+        return {
+            'Sec-Ch-Ua': HeaderFactory.SEC_CH_UA,
+            'Sec-Ch-Ua-Mobile': HeaderFactory.SEC_CH_UA_MOBILE,
+            'Sec-Ch-Ua-Platform': HeaderFactory.SEC_CH_UA_PLATFORM,
+        }
+
     def create_for_doc_get(self, url: str, additional_headers: dict) -> dict:
         default_headers = {
             'Host': UrlHelper.get_host(url),
-            'User-Agent': self._user_agent,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'Accept-Language': HeaderFactory.ACCEPT_LANGUAGE,
-            'Accept-Encoding': HeaderFactory.ACCEPT_ENCODING,
-            'Referer': self._request_session_context.get_last_referer(),
             'Connection': 'keep-alive',
+            **self._client_hints(),
             'Upgrade-Insecure-Requests': '1',
-            'Sec-Fetch-Dest': 'document',
+            'User-Agent': self._user_agent,
+            'Accept': HeaderFactory.ACCEPT_DOCUMENT,
+            'Sec-Fetch-Site': 'same-origin',
             'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'same-site',
             'Sec-Fetch-User': '?1',
-            'Sec-GPC': '1'
+            'Sec-Fetch-Dest': 'document',
+            'Referer': self._request_session_context.get_last_referer(),
+            'Accept-Encoding': HeaderFactory.ACCEPT_ENCODING,
+            'Accept-Language': HeaderFactory.ACCEPT_LANGUAGE,
         }
 
-        merged_headers = DictionaryHelper.merge_with_priority(additional_headers, default_headers)
-        return merged_headers
+        return DictionaryHelper.merge_with_priority(additional_headers, default_headers)
 
     def create_for_xhr_get(self, url: str, additional_headers: dict) -> dict:
         default_headers = {
             'Host': UrlHelper.get_host(url),
-            'User-Agent': self._user_agent,
-            'Accept': 'text/javascript, application/javascript, */*',
-            'Accept-Language': HeaderFactory.ACCEPT_LANGUAGE,
-            'Accept-Encoding': HeaderFactory.ACCEPT_ENCODING,
-            'Referer': self._request_session_context.get_last_referer(),
-            'Content-Type': 'application/x-www-form-urlencoded',
             'Connection': 'keep-alive',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-origin',
-            'Sec-GPC': '1',
+            **self._client_hints(),
+            'Accept': 'text/javascript, application/javascript, */*',
             'X-Requested-With': 'XMLHttpRequest',
+            'User-Agent': self._user_agent,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Dest': 'empty',
+            'Referer': self._request_session_context.get_last_referer(),
+            'Accept-Encoding': HeaderFactory.ACCEPT_ENCODING,
+            'Accept-Language': HeaderFactory.ACCEPT_LANGUAGE,
         }
 
-        merged_headers = DictionaryHelper.merge_with_priority(additional_headers, default_headers)
-        return merged_headers
+        return DictionaryHelper.merge_with_priority(additional_headers, default_headers)
 
     def create_for_form_post(self, url: str, additional_headers: dict, data: dict) -> dict:
 
         default_headers = {
             'Host': UrlHelper.get_host(url),
-            'User-Agent': self._user_agent,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'Accept-Language': HeaderFactory.ACCEPT_LANGUAGE,
-            'Accept-Encoding': HeaderFactory.ACCEPT_ENCODING,
-            'Referer': self._request_session_context.get_last_referer(),
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': str(len(urlencode(data))),
-            'Origin': UrlHelper.get_origin(url),
             'Connection': 'keep-alive',
+            'Content-Length': str(len(urlencode(data))),
+            **self._client_hints(),
             'Upgrade-Insecure-Requests': '1',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
+            'Origin': UrlHelper.get_origin(url),
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': self._user_agent,
+            'Accept': HeaderFactory.ACCEPT_DOCUMENT,
             'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-Mode': 'navigate',
             'Sec-Fetch-User': '?1',
-            'Sec-GPC': '1'
+            'Sec-Fetch-Dest': 'document',
+            'Referer': self._request_session_context.get_last_referer(),
+            'Accept-Encoding': HeaderFactory.ACCEPT_ENCODING,
+            'Accept-Language': HeaderFactory.ACCEPT_LANGUAGE,
         }
 
-        merged_headers = DictionaryHelper.merge_with_priority(additional_headers, default_headers)
-        return merged_headers
+        return DictionaryHelper.merge_with_priority(additional_headers, default_headers)
 
     def create_for_xhr_post(self, url: str, additional_headers: dict, data: dict) -> dict:
 
         default_headers = {
             'Host': UrlHelper.get_host(url),
-            'User-Agent': self._user_agent,
-            'Accept': '*/*',
-            'Accept-Language': HeaderFactory.ACCEPT_LANGUAGE,
-            'Accept-Encoding': HeaderFactory.ACCEPT_ENCODING,
-            'Referer': self._request_session_context.get_last_referer(),
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': str(len(urlencode(data))),
-            'Origin': UrlHelper.get_origin(url),
             'Connection': 'keep-alive',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
+            'Content-Length': str(len(urlencode(data))),
+            **self._client_hints(),
+            'Accept': '*/*',
+            'X-Requested-With': 'XMLHttpRequest',
+            'User-Agent': self._user_agent,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Origin': UrlHelper.get_origin(url),
             'Sec-Fetch-Site': 'same-origin',
-            'Sec-GPC': '1'
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Dest': 'empty',
+            'Referer': self._request_session_context.get_last_referer(),
+            'Accept-Encoding': HeaderFactory.ACCEPT_ENCODING,
+            'Accept-Language': HeaderFactory.ACCEPT_LANGUAGE,
         }
 
-        merged_headers = DictionaryHelper.merge_with_priority(additional_headers, default_headers)
-        return merged_headers
+        return DictionaryHelper.merge_with_priority(additional_headers, default_headers)
 
     @staticmethod
     def create(request_session_context: RequestSessionContext):
-        random_user_agent = random.choice(HeaderFactory.USER_AGENTS)
-        return HeaderFactory(request_session_context, random_user_agent)
+        return HeaderFactory(request_session_context, HeaderFactory.USER_AGENT)
